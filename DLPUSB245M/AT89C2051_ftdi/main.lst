@@ -1,0 +1,515 @@
+C51 COMPILER V6.11.4C,  MAIN                      03/08/110  11:15:24  PAGE  1
+
+QCW(0x00002D1A)
+
+WIN32 C51 COMPILER V6.11.4C, COMPILATION OF MODULE MAIN      
+OBJECT MODULE PLACED IN f:\dlpusb245m\at89c2051_ftdi\main.obj
+COMPILER INVOKED BY: C51.EXE F:\DLPUSB245M\AT89C2051_FTDI\MAIN.C OBJECT(F:\DLPUS
+            -B245M\AT89C2051_FTDI\MAIN.OBJ) PIN(C:\FSI\INC) NOAM PR(F:\DLPUSB245
+            -M\AT89C2051_FTDI\MAIN.LST) CD SB OE(1) SM FP(NOFLOAT) PW(80) 
+
+stmt level    source
+   1          #include<reg2051.h>
+   2          #include<intrins.h> 
+   3          sbit RXF = P3^2;
+   4          sbit TXE = P3^3;
+   5          sbit RD = P3^4;
+   6          sbit WR = P3^5;
+   7          
+   8          bit rxflag;
+   9          bit flag;
+  10          bit Txflag;
+  11          unsigned char rxChr;
+  12          unsigned char cnt;
+  13          void Delay25ms(void)
+  14          {
+  15   1      	TL0 = 0x4C;//25ms
+  16   1      	TH0 = 0x00;
+  17   1      	TR0 = 1;
+  18   1      	while(!TF0);
+  19   1      	TR0 = 0;
+  20   1      	TF0 = 0;
+  21   1      }
+  22          void PrintChar(unsigned char c)
+  23          {
+  24   1      
+  25   1      	TI=1;
+  26   1      	while (!TI);	TI=0;	SBUF = c;
+  27   1      	while (!TI);	TI=0;
+  28   1      }
+  29          void PrintString(char *s)
+  30          {
+  31   1      	while (*s)
+  32   1      	{
+  33   2      		PrintChar(*s);
+  34   2      		s++;
+  35   2      	}
+  36   1      }
+  37          unsigned char DLP_Read(void)
+  38          {
+  39   1      	unsigned char q;
+  40   1      	if(!RXF)
+  41   1      	{
+  42   2      		P1 = 0xFF;
+  43   2      		//_nop_();
+  44   2      		//_nop_();
+  45   2      		RD = 0; 
+  46   2      		q = P1;
+  47   2      		//_nop_();
+  48   2      		//_nop_(); 
+  49   2      		RD = 1;
+  50   2      		return q;
+  51   2      	}
+  52   1      }
+  53          
+  54          void DLP_Send(unsigned char s)
+  55          {
+  56   1      	if(!TXE)
+  57   1      	{
+  58   2      	 	 P1 = 0x00;
+  59   2      	 	 //_nop_(); 
+  60   2      	 	 P1 = s;	
+  61   2      	 	 _nop_();
+  62   2      	 	 WR = 0; 
+  63   2      	 	 //_nop_();
+  64   2      		 //_nop_();
+  65   2      	 	 WR = 1;
+  66   2      	 	 P1 = 0xFF; 
+  67   2      	}
+  68   1      }
+  69          
+  70          void main(void)
+  71          {
+  72   1      	unsigned char temp;
+  73   1      	unsigned char cnt=0;
+  74   1      	SCON = 0x50;
+  75   1      	TMOD = 0x21;
+  76   1      	TL1 = 0xFD;
+  77   1      	TH1 = 0xFD;
+  78   1      	TR1 = 1;
+  79   1      	EX0 = 1;
+  80   1      	IT0 = 1;
+  81   1      	ES	= 1;
+  82   1      	EA = 1;
+  83   1      	RD = 1;
+  84   1      	WR = 1;
+  85   1      	
+  86   1      	while(1)
+  87   1      	{
+  88   2      	 	if(flag)
+  89   2      	 	{
+  90   3      	 		flag = 0;
+  91   3      	 		temp = DLP_Read();
+  92   3      	 		//PrintChar(temp);
+  93   3      	 		Txflag = 1;
+  94   3      	 	}
+  95   2      	 	if(Txflag)
+  96   2      	 	{
+  97   3      	 		Txflag = 0;
+  98   3      	 		DLP_Send(temp);
+  99   3      	 	}
+ 100   2      	}//while
+ 101   1      }//main
+
+WARNING 280 IN LINE 73 OF main.c : 'cnt': unreferenced symbol
+
+WARNING 359 IN LINE 73 OF main.c : 'cnt' is assigned a value that is never used
+            -
+ 102          void Recieve_EX0() interrupt 0
+ 103          {
+ 104   1       	flag = 1;
+ 105   1      }
+ 106          void Serial() interrupt 4
+ 107          {
+ 108   1      	if (RI)
+ 109   1      	{
+ 110   2      		RI = 0;
+ 111   2        		rxChr = SBUF;
+ 112   2        		rxflag = 1;
+ 113   2        		switch(rxChr)
+ 114   2        		{
+ 115   3        			case 'A':
+ 116   3        				DLP_Send('A');
+ 117   3        				DLP_Send('B');
+ 118   3        				DLP_Send('C');
+ 119   3        				DLP_Send('D');
+ 120   3        				DLP_Send('E');
+ 121   3        				DLP_Send('F');
+ 122   3        				break;
+ 123   3        			case 'B':
+ 124   3        				for(cnt=0;cnt<225;cnt++)
+ 125   3        					DLP_Send(cnt);
+ 126   3        				for(cnt=0;cnt<225;cnt++)
+ 127   3        					DLP_Send(cnt);
+ 128   3        				for(cnt=0;cnt<225;cnt++)
+ 129   3        					DLP_Send(cnt);
+ 130   3        				for(cnt=0;cnt<225;cnt++)
+ 131   3        					DLP_Send(cnt);
+ 132   3        				break;
+ 133   3        			default:
+ 134   3        				break;
+ 135   3        		}
+ 136   2        	}//End if
+ 137   1      }
+ 138          
+ 139          
+ 140          
+ 141          
+ 142          
+ 143          
+ 144          
+ 145          
+ 146          
+ 147          
+ 148          
+ 149          
+ 150          
+ 151          
+ 152          
+ 153          
+ 154          
+ 155          
+ 156          
+ 157          
+ 158          
+ 159          
+ 160          
+ 161          
+ 162          
+ 163          
+ 164          
+ 165          
+ 166          
+ 167          
+ 168          
+ 169          
+ 170          
+ 171          
+ 172          
+ 173          
+ 174          
+C51 COMPILER V6.11.4C,  MAIN                      03/08/110  11:15:24  PAGE  2
+
+ASSEMBLY LISTING OF GENERATED OBJECT CODE
+
+            ; FUNCTION Delay25ms (BEGIN)
+                                           ; SOURCE LINE # 15 
+0000 758A4C         MOV    TL0,#04CH
+                                           ; SOURCE LINE # 16 
+0003 758C00         MOV    TH0,#000H
+                                           ; SOURCE LINE # 17 
+0006 D28C           SETB   TR0
+0008         ?WHILE1:
+                                           ; SOURCE LINE # 18 
+0008 308DFD         JNB    TF0,?WHILE1
+                                           ; SOURCE LINE # 19 
+000B C28C           CLR    TR0
+                                           ; SOURCE LINE # 20 
+000D C28D           CLR    TF0
+000F 22             RET    
+
+            ; FUNCTION Delay25ms (END)
+
+            ; FUNCTION _PrintChar (BEGIN)
+              ; Register R7 is assigned to parameter c
+                                           ; SOURCE LINE # 25 
+0000 D299           SETB   TI
+0002         ?WHILE4:
+                                           ; SOURCE LINE # 26 
+0002 3099FD         JNB    TI,?WHILE4
+0005 C299           CLR    TI
+0007 8F99           MOV    SBUF,R7
+0009         ?WHILE5:
+                                           ; SOURCE LINE # 27 
+0009 3099FD         JNB    TI,?WHILE5
+000C C299           CLR    TI
+000E 22             RET    
+
+            ; FUNCTION _PrintChar (END)
+
+            ; FUNCTION _PrintString (BEGIN)
+              ; Register R0R4R5 is assigned to parameter s
+                                           ; SOURCE LINE # 34 
+0000 EB             MOV    A,R3
+0001 FD             MOV    R5,A
+0002 EA             MOV    A,R2
+0003 FC             MOV    R4,A
+0004 E9             MOV    A,R1
+0005 F8             MOV    R0,A
+0006         ?WHILE7:
+                                           ; SOURCE LINE # 31 
+0006 ED             MOV    A,R5
+0007 FB             MOV    R3,A
+0008 EC             MOV    A,R4
+0009 FA             MOV    R2,A
+000A E8             MOV    A,R0
+000B F9             MOV    R1,A
+000C 120000  R      LCALL  IPGN1?C
+000F 6014           JZ     ?NXT7
+                                           ; SOURCE LINE # 33 
+0011 ED             MOV    A,R5
+0012 FB             MOV    R3,A
+0013 EC             MOV    A,R4
+0014 FA             MOV    R2,A
+0015 E8             MOV    A,R0
+0016 F9             MOV    R1,A
+0017 120000  R      LCALL  IPGN1?C
+001A FF             MOV    R7,A
+001B 120000  R      LCALL  _PrintChar
+                                           ; SOURCE LINE # 34 
+001E 08             INC    R0
+001F E8             MOV    A,R0
+0020 70E4           JNZ    ?WHILE7
+0022 0C             INC    R4
+0023 80E1           SJMP   ?WHILE7
+0025         ?NXT7:
+0025 22             RET    
+
+            ; FUNCTION _PrintString (END)
+
+            ; FUNCTION DLP_Read (BEGIN)
+              ; R6 is assigned to q
+                                           ; SOURCE LINE # 40 
+0000 20B20B         JB     RXF,?NXT9
+                                           ; SOURCE LINE # 42 
+0003 7590FF         MOV    P1,#0FFH
+                                           ; SOURCE LINE # 45 
+0006 C2B4           CLR    RD
+                                           ; SOURCE LINE # 46 
+0008 AE90           MOV    R6,P1
+000A 8E07           MOV    AR7,R6
+                                           ; SOURCE LINE # 49 
+000C D2B4           SETB   RD
+000E         ?NXT9:
+                                           ; SOURCE LINE # 50 
+000E 22             RET    
+
+            ; FUNCTION DLP_Read (END)
+
+            ; FUNCTION _DLP_Send (BEGIN)
+              ; Register R7 is assigned to parameter s
+                                           ; SOURCE LINE # 56 
+0000 20B30D         JB     TXE,?NXT11
+                                           ; SOURCE LINE # 58 
+0003 759000         MOV    P1,#000H
+                                           ; SOURCE LINE # 60 
+0006 8F90           MOV    P1,R7
+                                           ; SOURCE LINE # 61 
+0008 00             NOP    
+                                           ; SOURCE LINE # 62 
+0009 C2B5           CLR    WR
+                                           ; SOURCE LINE # 65 
+000B D2B5           SETB   WR
+                                           ; SOURCE LINE # 66 
+000D 7590FF         MOV    P1,#0FFH
+0010         ?NXT11:
+0010 22             RET    
+
+            ; FUNCTION _DLP_Send (END)
+
+            ; FUNCTION main (BEGIN)
+                                           ; SOURCE LINE # 74 
+0000 759850         MOV    SCON,#050H
+                                           ; SOURCE LINE # 75 
+0003 758921         MOV    TMOD,#021H
+                                           ; SOURCE LINE # 76 
+0006 758BFD         MOV    TL1,#0FDH
+                                           ; SOURCE LINE # 77 
+0009 758DFD         MOV    TH1,#0FDH
+                                           ; SOURCE LINE # 78 
+000C D28E           SETB   TR1
+                                           ; SOURCE LINE # 79 
+000E D2A8           SETB   EX0
+                                           ; SOURCE LINE # 80 
+0010 D288           SETB   IT0
+                                           ; SOURCE LINE # 81 
+0012 D2AC           SETB   ES
+                                           ; SOURCE LINE # 82 
+0014 D2AF           SETB   EA
+                                           ; SOURCE LINE # 83 
+0016 D2B4           SETB   RD
+                                           ; SOURCE LINE # 84 
+0018 D2B5           SETB   WR
+              ; R5 is assigned to temp
+001A         ?WHILE9:
+                                           ; SOURCE LINE # 88 
+001A 300009  R      JNB    flag,?NXT16
+                                           ; SOURCE LINE # 90 
+001D C200    R      CLR    flag
+                                           ; SOURCE LINE # 91 
+001F 120000  R      LCALL  DLP_Read
+0022 8F05           MOV    AR5,R7
+                                           ; SOURCE LINE # 93 
+0024 D200    R      SETB   Txflag
+0026         ?NXT16:
+                                           ; SOURCE LINE # 95 
+0026 3000F1  R      JNB    Txflag,?WHILE9
+                                           ; SOURCE LINE # 97 
+0029 C200    R      CLR    Txflag
+                                           ; SOURCE LINE # 98 
+002B 8D07           MOV    AR7,R5
+002D 120000  R      LCALL  _DLP_Send
+0030 80E8           SJMP   ?WHILE9
+
+            ; FUNCTION main (END)
+
+            ; FUNCTION Recieve_EX0 (BEGIN)
+                                           ; SOURCE LINE # 104 
+0000 C0D0           PUSH   PSW
+0002 D200    R      SETB   flag
+0004 D0D0           POP    PSW
+0006 32             RETI   
+
+            ; FUNCTION Recieve_EX0 (END)
+
+            ; FUNCTION Serial (BEGIN)
+                                           ; SOURCE LINE # 134 
+0000 C0E0           PUSH   ACC
+0002 C0D0           PUSH   PSW
+0004 EF             MOV    A,R7
+0005 C007           PUSH   AR7
+                                           ; SOURCE LINE # 108 
+0007 309879         JNB    RI,?NXT41
+                                           ; SOURCE LINE # 110 
+000A C298           CLR    RI
+                                           ; SOURCE LINE # 111 
+000C 859900  R      MOV    rxChr,SBUF
+                                           ; SOURCE LINE # 112 
+000F D200    R      SETB   rxflag
+                                           ; SOURCE LINE # 113 
+0011 E500    R      MOV    A,rxChr
+0013 24BF           ADD    A,#0BFH
+0015 6005           JZ     ?CASE2
+0017 14             DEC    A
+0018 601D           JZ     ?CASE3
+001A 8067           SJMP   ?NXT32
+001C         ?CASE2:
+                                           ; SOURCE LINE # 116 
+001C 7F41           MOV    R7,#041H
+001E 120000  R      LCALL  _DLP_Send
+                                           ; SOURCE LINE # 117 
+0021 0F             INC    R7
+0022 120000  R      LCALL  _DLP_Send
+                                           ; SOURCE LINE # 118 
+0025 0F             INC    R7
+0026 120000  R      LCALL  _DLP_Send
+                                           ; SOURCE LINE # 119 
+0029 0F             INC    R7
+002A 120000  R      LCALL  _DLP_Send
+                                           ; SOURCE LINE # 120 
+002D 0F             INC    R7
+002E 120000  R      LCALL  _DLP_Send
+                                           ; SOURCE LINE # 121 
+0031 0F             INC    R7
+0032 120000  R      LCALL  _DLP_Send
+                                           ; SOURCE LINE # 122 
+0035 804C           SJMP   ?NXT41
+0037         ?CASE3:
+                                           ; SOURCE LINE # 124 
+0037 750000  R      MOV    cnt,#000H
+003A         ?FOR4:
+003A E500    R      MOV    A,cnt
+003C B4E100         CJNE   A,#0E1H,?LAB29
+003F         ?LAB29:
+003F 5009           JNC    ?NXT33
+                                           ; SOURCE LINE # 125 
+0041 AF00    R      MOV    R7,cnt
+0043 120000  R      LCALL  _DLP_Send
+                                           ; SOURCE LINE # 124 
+0046 0500    R      INC    cnt
+0048 80F0           SJMP   ?FOR4
+004A         ?NXT33:
+                                           ; SOURCE LINE # 126 
+004A 750000  R      MOV    cnt,#000H
+004D         ?FOR5:
+004D E500    R      MOV    A,cnt
+004F B4E100         CJNE   A,#0E1H,?LAB31
+0052         ?LAB31:
+0052 5009           JNC    ?NXT35
+                                           ; SOURCE LINE # 127 
+0054 AF00    R      MOV    R7,cnt
+0056 120000  R      LCALL  _DLP_Send
+                                           ; SOURCE LINE # 124 
+0059 0500    R      INC    cnt
+005B 80F0           SJMP   ?FOR5
+005D         ?NXT35:
+                                           ; SOURCE LINE # 128 
+005D 750000  R      MOV    cnt,#000H
+0060         ?FOR6:
+0060 E500    R      MOV    A,cnt
+0062 B4E100         CJNE   A,#0E1H,?LAB33
+0065         ?LAB33:
+0065 5009           JNC    ?NXT37
+                                           ; SOURCE LINE # 129 
+0067 AF00    R      MOV    R7,cnt
+0069 120000  R      LCALL  _DLP_Send
+                                           ; SOURCE LINE # 124 
+006C 0500    R      INC    cnt
+006E 80F0           SJMP   ?FOR6
+0070         ?NXT37:
+                                           ; SOURCE LINE # 130 
+0070 750000  R      MOV    cnt,#000H
+0073         ?FOR7:
+0073 E500    R      MOV    A,cnt
+0075 B4E100         CJNE   A,#0E1H,?LAB35
+0078         ?LAB35:
+0078 5009           JNC    ?NXT32
+                                           ; SOURCE LINE # 131 
+007A AF00    R      MOV    R7,cnt
+007C 120000  R      LCALL  _DLP_Send
+                                           ; SOURCE LINE # 124 
+007F 0500    R      INC    cnt
+0081 80F0           SJMP   ?FOR7
+0083         ?NXT32:
+
+0083         ?NXT41:
+                                           ; SOURCE LINE # 134 
+0083 D007           POP    AR7
+0085 D0D0           POP    PSW
+0087 D0E0           POP    ACC
+0089 32             RETI   
+
+            ; FUNCTION Serial (END)
+
+C51 COMPILER V6.11.4C,  MAIN                      03/08/110  11:15:24  PAGE  3
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+rxflag . . . . . . . . . . . . . . . .  PUBLIC  DATA    BIT     0000H   1    
+flag . . . . . . . . . . . . . . . . .  PUBLIC  DATA    BIT     0001H   1    
+Txflag . . . . . . . . . . . . . . . .  PUBLIC  DATA    BIT     0002H   1    
+rxChr. . . . . . . . . . . . . . . . .  PUBLIC  DATA    BASE    0000H   1    
+cnt. . . . . . . . . . . . . . . . . .  PUBLIC  DATA    BASE    0001H   1    
+Delay25ms. . . . . . . . . . . . . . .  PUBLIC  CODE    PROC    -----   -----
+PrintChar. . . . . . . . . . . . . . .  PUBLIC  CODE    PROC    -----   -----
+  c?058. . . . . . . . . . . . . . . .  PARAM   DATA    BASE    0000H   1    
+  c?058. . . . . . . . . . . . . . . .  PARAM   DATA    BASE    0000H   1    
+PrintString. . . . . . . . . . . . . .  PUBLIC  CODE    PROC    -----   -----
+  s?059. . . . . . . . . . . . . . . .  PARAM   DATA    PTR     0000H   3    
+  s?059. . . . . . . . . . . . . . . .  PARAM   DATA    PTR     0000H   3    
+DLP_Read . . . . . . . . . . . . . . .  PUBLIC  CODE    PROC    -----   -----
+q?061. . . . . . . . . . . . . . . . .  PUBLIC  DATA    BASE    0000H   1    
+DLP_Send . . . . . . . . . . . . . . .  PUBLIC  CODE    PROC    -----   -----
+  s?062. . . . . . . . . . . . . . . .  PARAM   DATA    BASE    0000H   1    
+  s?062. . . . . . . . . . . . . . . .  PARAM   DATA    BASE    0000H   1    
+main . . . . . . . . . . . . . . . . .  PUBLIC  CODE    PROC    -----   -----
+temp?064 . . . . . . . . . . . . . . .  PUBLIC  DATA    BASE    0000H   1    
+cnt?065. . . . . . . . . . . . . . . .  PUBLIC  DATA    BASE    0000H   1    
+Recieve_EX0. . . . . . . . . . . . . .  PUBLIC  CODE    PROC    -----   -----
+Serial . . . . . . . . . . . . . . . .  PUBLIC  CODE    PROC    -----   -----
+C51 COMPILER V6.11.4C,  MAIN                      03/08/110  11:15:24  PAGE  4
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    296    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+C51 COMPILATION COMPLETE.  2 WARNINGS,  0 ERROR

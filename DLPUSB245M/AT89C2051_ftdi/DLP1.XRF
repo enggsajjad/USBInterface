@@ -1,0 +1,26 @@
+WIN32 L51 CODE BANKING LINKER/LOCATOR V4.08.06,  INVOKED BY: 
+L51.EXE f:\dlpusb245m\at89c2051_ftdi\main.OBJ  to  F:\DLPUSB245M\AT89C2051_FTDI\DLP1.ABS PR(F:\DLPUSB245M\AT89C2051_FTDI\DLP1.M51) SN(1066142959415E46769E694) PW(80) RS(128) ix 
+
+INTER-MODULE CROSS-REFERENCE LISTING
+------------------------------------
+
+    NAME. . . . . . . . USAGE   MODULE NAMES
+    ----------------------------------------
+    ?C_START3 . . . . . CODE    [C3S]:  MAIN 
+    CNT . . . . . . . . DATA    [MAIN]: 
+    DELAY25MS . . . . . CODE    [MAIN]: 
+    DLP_READ  . . . . . CODE    [MAIN]: 
+    FLAG  . . . . . . . BIT     [MAIN]: 
+    IDATALEN  . . . . .         [_C_IDATALEN]:  C3S 
+    IPGN1?C . . . . . . CODE    [IPGN1]:  MAIN 
+    MAIN  . . . . . . . CODE    [MAIN]:  C3S 
+    RECIEVE_EX0 . . . . CODE    [MAIN]: 
+    RXCHR . . . . . . . DATA    [MAIN]: 
+    RXFLAG  . . . . . . BIT     [MAIN]: 
+    SERIAL  . . . . . . CODE    [MAIN]: 
+    TXFLAG  . . . . . . BIT     [MAIN]: 
+    _DLP_SEND . . . . . CODE    [MAIN]: 
+    _INITP2?  . . . . .         [_C_IDATALEN]:  C3S 
+    _PRINTCHAR  . . . . CODE    [MAIN]: 
+    _PRINTSTRING  . . . CODE    [MAIN]: 
+    _STACK  . . . . . . IDATA   [MAIN]:  C3S 
